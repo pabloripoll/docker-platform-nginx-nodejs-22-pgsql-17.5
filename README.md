@@ -181,6 +181,9 @@ $ make local-hostname
 
 ## <a id="create-containers"></a>Create and Start Docker Containers
 
+<font color="orange"><b>IMPORTANT:</b></font> Copy `./resources/docs/apirest/default-install` all content files into `./apirest` to test the installation on browser. This approach was set to let this repository re-usable for other projects.
+<br>
+
 Create and start up the API container
 ```bash
 $ make apirest-create
