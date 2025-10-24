@@ -1,6 +1,6 @@
 services:
 
-  be-webadm:
+  apirest:
     networks:
       net: {}
 
