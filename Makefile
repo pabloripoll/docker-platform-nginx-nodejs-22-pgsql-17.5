@@ -81,11 +81,14 @@ apirest-network: ## creates the apirest container network - execute this recipe 
 apirest-ssh: ## enters the apirest container shell
 	cd platform/$(APIREST_PLTF) && $(MAKE) ssh
 
-apirest-start: ## starts the apirest container running
+apirest-start: ## starts the apirest container
 	cd platform/$(APIREST_PLTF) && $(MAKE) start
 
 apirest-stop: ## stops the apirest container but its assets will not be destroyed
 	cd platform/$(APIREST_PLTF) && $(MAKE) stop
+
+apirest-restart: ## restarts the running apirest container
+	cd platform/$(APIREST_PLTF) && $(MAKE) restart
 
 apirest-destroy: ## destroys completly the apirest container
 	echo ${C_RED}"Attention!"${C_END};
@@ -127,11 +130,14 @@ postgres-network: ## creates the database container external network
 postgres-ssh: ## enters the apirest container shell
 	cd platform/$(DATABASE_PLTF) && $(MAKE) ssh
 
-postgres-start: ## starts the database container running
+postgres-start: ## starts the database container
 	cd platform/$(DATABASE_PLTF) && $(MAKE) start
 
 postgres-stop: ## stops the database container but its assets will not be destroyed
 	cd platform/$(DATABASE_PLTF) && $(MAKE) stop
+
+postgres-restart: ## restarts the running database container
+	cd platform/$(DATABASE_PLTF) && $(MAKE) restart
 
 postgres-destroy: ## destroys completly the database container with its data
 	echo ${C_RED}"Attention!"${C_END};
