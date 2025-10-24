@@ -6,21 +6,27 @@
 
 # NGINX 1.28, NODEJS 22.16, POSTGRES 17.5
 
-This Infrastructure Platform repository is designed for back-end projects and provides two separate platforms: one for the API and another for the database.
+## Repository Overview
 
-The goal of this structure is to offer developers a consistent framework for local development, mirroring real-world deployment scenarios. In production, the API may be deployed on an AWS EC2 / GCP GCE or  instance or distributed across Kubernetes pods, while the database would reside on an AWS RDS instance.
+This Infrastructure Platform repository provides a dedicated Node.js stack for back-end API projects, enabling developers to work within a consistent local development framework that closely mirrors real-world deployment scenarios. Whether your application will run on **AWS EC2**, **Google Cloud GCE**, **Azure** instances, **VPS** or be distributed across **Kubernetes pods**, this structure ensures smooth transitions between environments.
 
-Additionally, this repository is independent of the API container code, allowing it to be developed in parallel with different API features. It can be configured with various platform settings tailored to the infrastructure or machine where it will be built and run — for example, adjusting container RAM usage, ports, and more.
+### Modular and Decoupled Design
+
+A key feature of this repository is its modular design: it is intentionally decoupled from its sub-directory `./apirest`, allowing the platform to be maintained independently without impacting the associated subproject. This separation supports dedicated upkeep and flexibility for both the platform and its detached web application.
+
+### Multi-instance Local Development
+
+Additionally, the platform is designed to support running multiple development versions of the `./apirest` simultaneously, simply by adjusting a few environment settings to differentiate each container instance. It is highly configurable to accommodate various infrastructure or machine requirements, allowing developers to easily tailor parameters such as container RAM allocation, port assignments, and other platform settings to best fit their local or deployment environment.
 <br>
 
 ## Content of this page:
 
 - [Requirements](#requirements)
 - [Platform Features](#platform-features)
-- [API service container settings](#api-settings)
-- [Database service container settings](#db-settings)
-- [Set up Docker Containers](#setup-containers)
-- [Create Docker Containers](#create-containers)
+- [API Service Container Setting](#api-settings)
+- [Database Service Container Setting](#db-settings)
+- [Platforms Containers Build Automation](#platform-automation)
+- [Build and Run Platforms Docker Containers](#building-containers)
 - [GNU Make file recipes](#make-help)
 - [Use this Platform Repository for REST API project](#platform-usage)
 <br><br>
@@ -29,9 +35,14 @@ Additionally, this repository is independent of the API container code, allowing
 
 Despite Docker’s cross-platform compatibility, for intermediate to advanced software development on environments other than Windows NT or macOS, automating the platform build and streamlining the process of starting feature development is crucial. This automation enables a more dynamic and efficient software development lifecycle.
 
-- Docker
-- Docker Compose
-- GNU Make *(otherwise commands must be executed manually)*
+- **Docker**: Containerizes applications for consistent environments.
+- **Docker Compose**: Manages multi-container setups and dependencies.
+- **GNU Make**: Automates build commands and workflows *(otherwise, commands must be executed manually)*.
+
+If you won't use GNU Make, Docker commands will have to be executed from within the `./platform/nginx-nodejs/docker` and `./platform/postgres-17.5/docker` directories, e.g.:
+```bash
+platform/nginx-nodejs/docker $ sudo docker compose up --build --no-recreate -d
+```
 
 | Dev machine   | Machine's features                                                                            |
 | ------------- | --------------------------------------------------------------------------------------------- |
@@ -54,9 +65,11 @@ It can be installed the most known JS **back-end / API** frameworks:
 Take into account that each framework will demand its specific configuration from inside container.
 <br><br>
 
-## <a id="api-settings"></a>API service container settings
+## <a id="api-settings"></a>API Service Container Setting
 
-Inside `./platform/nginx-nodejs` there are a dedicated GNU Make file and the main Docker directory with the required scripts and stack assets in the `./platform/nginx-nodejs/docker/config` directory to build the required platform configuration. Also, there is a `./resources/docs/platform/nginx-nodejs/config.sample` directory with alternate configuration files suggestions. Also in this place you can save the different SDLC configurations *(e.g. Testing, Staging, Production)*.
+The container instance has its dedicated GNU Make and the core Docker directory which contains the scripts and stack assets to build the required platform configuration.
+
+Also, there is a copy at `./resources/docs/platform/` directory to contain the exact or the alternated scripts, so you can save or backup the different SDLC required configuration *(e.g. Testing, Staging, Production)*.
 
 Content:
 - Linux Alpine version 3.22
@@ -64,9 +77,9 @@ Content:
 - NodeJS 22.16 *(upgradable)*
 <br>
 
-<font color="orange"><b>IMPORTANT:</b></font> There is a `.env.example` file with the variables required to build the container by `docker-compose.yml` file to create the container if no GNU Make is available on developer's machine. Otherwise, it is not required to create its `.env` manually file for building the container.
+> **Note**: There is a `./platform/nginx-nodejs/docker/.env.example` file with the variables required to build the container by `docker-compose.yml` file to create the container. Otherwise, if no GNU Make is available on developer's machine, it is required to create its `.env` manually to build the container.
 
-API environment: `./platform/nginx-nodejs/docker/.env`
+API environment file content at `./platform/nginx-nodejs/docker`:
 ```bash
 COMPOSE_PROJECT_LEAD="myproj"
 COMPOSE_PROJECT_CNET="mp-dev"
@@ -82,18 +95,18 @@ COMPOSE_PROJECT_GROUP="myproj"
 ```
 <br>
 
-## <a id="db-settings"></a>Database service container settings
+## <a id="db-settings"></a>Database Service Container Setting
 
-Inside `./platform/pgsql-17.5` there are a dedicated GNU Make file and the main Docker directory with the required scripts to build the required platform configuration adapted from [PostgreSQL GitHub repository source](https://github.com/docker-library/postgres/blob/master/17/alpine3.22/docker-entrypoint.sh)
+Inside `./platform/pgsql-17.5` there are a dedicated GNU Make file and the main Docker directory with the scripts to build the required platform configuration adapted from [PostgreSQL GitHub repository source](https://github.com/docker-library/postgres/blob/master/17/alpine3.22/docker-entrypoint.sh)
 
 Content:
 - Linux Alpine version 3.22
 - Postgres 17.5
 <br>
 
-<font color="orange"><b>IMPORTANT:</b></font> There is a `.env.example` file with the variables required to build the container by `docker-compose.yml` file to create the container if no GNU Make is available on developer's machine. Otherwise, it is not required to create its `.env` manually file for building the container.
+> **Note**: There is a `./platform/pgsql-17.5/docker/.env.example` file with the variables required to build the container by `docker-compose.yml` file to create the container. Otherwise, if no GNU Make is available on developer's machine, it is required to create its `.env` manually to build the container.
 
-Database environment: `./platform/pgsql-17.5/docker/.env`
+Database environment file content at `./platform/pgsql-17.5/docker`:
 ```bash
 COMPOSE_PROJECT_LEAD="myproj"
 COMPOSE_PROJECT_CNET="mp-dev"
@@ -109,7 +122,7 @@ POSTGRES_PASSWORD="J4YPuJaieJ35gNAOSQQor87s82q2eUS1"
 ```
 <br>
 
-## <a id="setup-containers"></a>Configure Docker Containers
+## <a id="platform-automation"></a>Platforms Containers Build Automation
 
 Create the root `./.env` file from the [./.env.example](./.env.example) and follow its description to configure the platforms. The end result would be like this:
 ```bash
@@ -151,7 +164,7 @@ DATABASE_INIT=pgsql-init.sql
 DATABASE_BACK=pgsql-backup.sql
 ```
 
-Once the environment file is set, create each Docker environment file by the automated commands using GNU Make:
+Once this environment file is set, it can be created each container instance's `.env` automatically by using GNU Make:
 
 Set up the API container
 ```bash
@@ -170,7 +183,7 @@ $ make postgres-set
 </div>
 <br>
 
-Watch the local hostname IP on which Docker serves and the ports assigned, even though the API can be accessed through `http://127.0.0.1` or `http://localhost`
+Watch the local hostname IP and ports on which Docker containers will be served, even though the API can be accessed through `http://127.0.0.1` or `http://localhost`
 ```bash
 $ make local-hostname
 ```
@@ -179,27 +192,57 @@ $ make local-hostname
 </div>
 <br>
 
-## <a id="create-containers"></a>Create and Start Docker Containers
-
-<font color="orange"><b>IMPORTANT:</b></font> Copy `./resources/docs/apirest/default-install` all content files into `./apirest` to test the installation on browser. This approach was set to let this repository re-usable for other projects.
-<br>
+## <a id="building-containers"></a>Build and Run Platforms Docker Containers
 
 Create and start up the API container
 ```bash
 $ make apirest-create
 ```
+
+<span color="orange"><b>IMPORTANT:</b></span> Once the container is built and running, the Nginx server block serves at port 80 proxing to port 3000 to be handled by NodeJS. On first installation will fail as it is needing to install the required packages with NPM from inside the container.
+
 <div style="with:100%;height:auto;text-align:center;">
     <img src="./resources/docs/images/make-apirest-create.jpg">
 </div>
 <br>
 
-Testing container visiting localhost with the assigned port, but with no database connection established or failed because of wrong configuration
 <div style="with:100%;height:auto;text-align:center;">
-    <img src="./resources/docs/images/test-containers-failed.jpg">
+    <img src="./resources/docs/images/test-apirest-failed.jpg">
 </div>
 <br>
 
-Create and start up the database container
+To preview the successful installation on browser, there is a basic home page sample at `./resources/docs/apirest/default-install/`. Copy its content into `./apirest` directory
+```bash
+$ cp -a ./resources/docs/apirest/default-install/. ./apirest
+```
+
+Then, access into the container to install required Node JS packages and restart the container
+```bash
+$ make apirest-ssh
+
+/var/www $ npm install
+/var/www $ exit
+
+$ make apirest-restart
+```
+
+> **Note**: Depending the date of the installation, NPM could require to be updated. **Only this NPM update** requires sudo privileges - *projects do not*.
+
+<div style="with:100%;height:auto;text-align:center;">
+    <img src="./resources/docs/images/test-containers-installation.jpg">
+</div>
+<br>
+
+Now you can see the NodeJS application running succesfully by visiting http://localhost:{port}/ on browser, but without the database connection established correctly, the sample home page will show a **Postgres** failure message.
+
+<div style="with:100%;height:auto;text-align:center;">
+    <img src="./resources/docs/images/test-postgres-failed.jpg">
+</div>
+<br>
+
+**REMEMBER** to set the selected port that will serve Postgres instance in the `./apirest/index.js` script. The changes will be set on container automatically as script is on `--watch` mode.
+
+Build and run the database container instance
 ```bash
 $ make postgres-create
 ```
@@ -223,9 +266,16 @@ Docker information for both container up and running
 </div>
 <br>
 
+Also there is a **useful GNU Make recipe** to see the container relevant information. This is important when is developing on dev mode inside the container, when for this example, you would see the framework development stage on Docker port, e.g. `http://172.18.0.2:{port}` ***<- this port can be assigned from project's framework configurations***
+
+<div style="with:100%;height:auto;text-align:center;">
+    <img src="./resources/docs/images/make-apirest-info.jpg">
+</div>
+<br>
+
 Despite each container can be stop or restarted, they can be stop and destroy both containers simultaneously to clean up locally from Docker generated cache, without affecting other containers running on the same machine.
 ```bash
-$ yes | make apirest-destroy postgres-destroy
+$ make apirest-destroy postgres-destroy
 ```
 <div style="with:100%;height:auto;text-align:center;">
     <img src="./resources/docs/images/make-containers-destroy.jpg">
@@ -243,7 +293,7 @@ This streamlines the workflow for managing containers with mnemonic recipe names
 </div>
 <br>
 
-## <a id="platform-usage"></a>Use this Platform Repository for REST API project
+## <a id="platform-usage"></a>Use this Platform Repository for your REST API Project
 
 Clone the platforms repository
 ```bash
@@ -280,38 +330,79 @@ Repository directories structure overview:
 ```
 <br>
 
-Set up platforms
-- Copy `.env.example` to `.env` and adjust settings (apirest port, database port, container RAM usage, etc.)
+Here’s a step-by-step guide for using this Platform repository along with your own API project:
+
+- Remove the existing `./apirest` directory contents from local and from git cache
+- Install your desired repository inside `./apirest`
+- Choose between Git submodule and detached repository approaches
 <br>
 
-Generate the environment for each platform
-```bash
-$ make apirest-set postgres-set
-```
-<br>
+## Managing the `apirest` Directory: Submodule vs Detached Repository
 
-Create platforms containers
-```bash
-$ make apirest-create postgres-create
-```
-<br>
+To remove the `./apirest` directory with the default installation content and install your desired repository inside it, there are two alternatives for managing both the platform and apirest repositories independently:
 
-Remove default Nginx-NodeJS platform API content
-```bash
-$ git rm -r ./apirest
-$ git clean -fd
-$ git reset --hard
-$ rm -rfv ./apirest/*
-$ rm -rfv ./apirest/.*
-```
+### 1. **GIT Sub-module**
 
-Now `./apirest` directory can be used to install any other REST API repository
+> Git commands can be executed **only from inside the container**.
 
-> **Note**: Most probably it would be needed to update root `.gitignore` file to ignore the REST API one.
+- Remove `apirest` from local and git cache:
+  ```bash
+  $ rm -rfv ./apirest/* ./apirest/.[!.]*$
+  $ git rm -r --cached apirest
+  $ git commit -m "Remove apirest directory and its default installation"
+  ```
 
-<br>
+- Add the desired repository as a submodule:
+  ```bash
+  $ git submodule add git@[vcs]:[account]/[repository].git ./apirest
+  $ git commit -m "Add apirest as a git submodule"
+  ```
 
-Once the container is up, Supervisor will run the sample REST API script. See `./platform/nginx-nodejs/docker/config/supervisor/conf.d/nodejs.conf`
+- To update submodule contents:
+  ```bash
+  $ cd ./apirest
+  $ git pull origin main  # or desired branch
+  ```
+
+- To initialize/update submodules after `git clone`:
+  ```bash
+  $ git submodule update --init --recursive
+  ```
+
+---
+
+### 2. **GIT Detached Repository (Recommended)**
+
+> Git commands can be executed **whether from inside the container or on the local machine**.
+
+- Remove `apirest` from local and git cache:
+  ```bash
+  $ rm -rfv ./apirest/* ./apirest/.[!.]*
+  $ git rm -r --cached apirest
+  $ git clean -fd
+  $ git reset --hard
+  $ git commit -m "Remove apirest directory and its default installation"
+  ```
+
+- Clone the desired repository as a detached repository:
+  ```bash
+  $ git clone git@[vcs]:[account]/[repository].git ./apirest
+  ```
+
+- The `apirest` directory is now an **independent repository**, not tracked as a submodule in your main repo. You can use `git` commands freely inside `apirest` from anywhere.
+
+---
+
+#### **Summary Table**
+
+| Approach         | Repo independence | Where to run git commands | Use case                        |
+|------------------|------------------|--------------------------|----------------------------------|
+| Submodule        | Tracked by main  | Inside container         | Main repo controls webapp version|
+| Detached (rec.)  | Fully independent| Local or container       | Maximum flexibility              |
+
+---
+
+Once the container is up, Supervisor will run the sample API script. See `./platform/nginx-nodejs/docker/config/supervisor/conf.d/nodejs.conf`
 ```bash
 [program:nodejs]
 command=node --watch /var/www/index.js
@@ -323,7 +414,9 @@ autorestart=false
 startretries=0
 ```
 
-> **Note**: If a repository will be clone inside ./apirest directory and the main script is other, remember to modify this file.
+> **Note**: If API main script is other, remember to modify this file.
+
+> After switching to either alternative, consider adding `/apirest` to your `.gitignore` in this main platform repository to prevent accidental tracking *(especially for detached repository)*.
 
 <br>
 
