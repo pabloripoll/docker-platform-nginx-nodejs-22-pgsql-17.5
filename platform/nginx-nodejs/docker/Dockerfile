@@ -24,7 +24,6 @@ RUN addgroup -S --gid ${GID} ${GROUP} \
     && echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Install main packages and remove default server definition
-# Install main packages and remove default server definition
 RUN apk add --no-cache \
   openrc \
   curl \
