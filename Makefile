@@ -106,6 +106,14 @@ apirest-destroy: ## destroys completly the apirest container
 		fi \
 	fi
 
+.PHONY: apirest-service-conf apirest-service-conf-update
+
+apirest-service-conf: ## lists the services set on container running by supervisord
+	cd platform/$(APIREST_PLTF) && $(MAKE) supervisord-conf
+
+apirest-service-update: ## updates supervisord services without stoping or rebuilding the container
+	cd platform/$(APIREST_PLTF) && $(MAKE) supervisord-update
+
 # -------------------------------------------------------------------------------------------------
 #  Database Service
 # -------------------------------------------------------------------------------------------------
