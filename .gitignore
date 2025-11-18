@@ -27,11 +27,18 @@ dist
 dist-ssr
 *.local
 
-vault
-resources/database/*
-!resources/database/.gitignore
-resources/docs/apirest/project/*
-!resources/docs/apirest/project/.gitignore
-platform/pgsql-17/data
-apirest/*
-!apirest/.gitignore
+# Platforms
+/vault
+/platform/nginx-nodejs*/docker/config/supervisor/conf.d
+!/platform/nginx-nodejs/docker/config/supervisor/conf.d/.gitkeep
+/resources/database/*
+!/resources/database/.gitkeep
+/resources/docs/apirest/project/*
+!/resources/docs/apirest/project/.gitkeep
+/platform/mysql*/data
+/platform/mariadb*/data
+/platform/pgsql*/data
+/apirest/*
+!/apirest/.gitkeep
+/webapp/*
+!/webapp/.gitkeep
