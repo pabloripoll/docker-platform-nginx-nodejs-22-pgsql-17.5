@@ -21,35 +21,23 @@ endif
 
 include ../../.env
 
-DOCKER_PLTF="POSTGRES 17.5"
+DOCKER_PLTF="MAILHOG"
 DOCKER_LEAD=$(PROJECT_LEAD)
 DOCKER_CNET=$(PROJECT_CNET)
 DOCKER_HOST=$(PROJECT_HOST)
-DOCKER_IMGK=$(DATABASE_IMGK)
-DOCKER_CAAS=$(DATABASE_CAAS)
-DOCKER_PORT=$(DATABASE_PORT)
-DOCKER_BIND=$(DATABASE_BIND)
-DOCKER_CPU=$(DATABASE_CAAS_CPU)
-DOCKER_MEM=$(DATABASE_CAAS_MEM)
-DOCKER_SWAP=$(DATABASE_CAAS_SWAP)
+DOCKER_IMGK=$(MAILER_IMGK)
+DOCKER_PORT=$(MAILER_PORT)
+DOCKER_CAAS=$(MAILER_CAAS)
+DOCKER_CAAS_MEM=$(MAILER_CAAS_MEM)
+DOCKER_CAAS_SWAP=$(MAILER_CAAS_SWAP)
+DOCKER_APP_PORT=$(MAILER_APP_PORT)
 
-SQL_ROOT=$(DATABASE_ROOT)
-SQL_NAME=$(DATABASE_NAME)
-SQL_USER=$(DATABASE_USER)
-SQL_PASS=$(DATABASE_PASS)
-
-CURRENT_DIR=$(patsubst %/,%,$(dir $(realpath $(firstword $(MAKEFILE_LIST)))))
-DIR_BASENAME=$(shell basename $(CURRENT_DIR))
-ROOT_DIR=$(CURRENT_DIR)
+ROOT_DIR=$(patsubst %/,%,$(dir $(realpath $(firstword $(MAKEFILE_LIST)))))
+DIR_BASENAME=$(shell basename $(ROOT_DIR))
 
 DOCKER_CONTAINER:=$(addsuffix -$(DOCKER_CAAS), $(DOCKER_LEAD))
-DOCKER_COMPOSE_RUN=$(DOCKER_COMPOSE) run --rm
+DOCKER_COMPOSE_RUN=$(DOCKER_COMPOSE) run -v --rm
 DOCKER_EXEC_SSH=$(DOCKER) exec -it $(DOCKER_CONTAINER) sh
-
-APPLICATION_UPDATE=''
-APPLICATION_INSTALL=''
-APPLICATION_INSTALL_BASE=''
-APPLICATION_INSTALL_PACKAGES=''
 
 # -------------------------------------------------------------------------------------------------
 #  Help
@@ -68,10 +56,10 @@ help: ## shows this Makefile help message
 
 port-check: ## shows this project port availability on local machine
 	echo "Checking configuration for "${C_YEL}"$(DOCKER_PLTF)"${C_END}" container:";
-	if [ -z "$($(DOCKER_USER) lsof -i :$(DOCKER_PORT))" ]; then \
-		echo ${C_BLU}"$(DOCKER_PLTF)"${C_END}" > hostname:"${C_GRN}"$(DOCKER_PORT) is free to use."${C_END}; \
-	else \
-		echo ${C_BLU}"$(DOCKER_PLTF)"${C_END}" > hostname:"${C_RED}"$(DOCKER_PORT) is busy. Update ./.env file."${C_END}; \
+	if [ -z "$($(DOCKER) lsof -i :$(DOCKER_PORT))" ]; then \
+		echo ${C_BLU}"$(DOCKER_PLTF)"${C_END}" > localhost:"${C_GRN}"$(DOCKER_PORT) is free to use."${C_END}; \
+    else \
+		echo ${C_BLU}"$(DOCKER_PLTF)"${C_END}" > localhost:"${C_RED}"$(DOCKER_PORT) is busy. Update ./.env file."${C_END}; \
 	fi
 
 # -------------------------------------------------------------------------------------------------
@@ -81,9 +69,9 @@ port-check: ## shows this project port availability on local machine
 
 env: ## checks if docker .env file exists
 	if [ -f ./docker/.env ]; then \
-		echo ${C_BLU}$(DOCKER_PLTF)${C_END}" docker-compose.yml .env file "${C_GRN}"is set."${C_END}; \
+		echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" - $(DOCKER_PLTF) "${C_YEL}"docker-compose.yml"${C_END}" .env file "${C_GRN}"is set."${C_END}; \
 	else \
-		echo ${C_BLU}$(DOCKER_PLTF)${C_END}" docker-compose.yml .env file "${C_RED}"is not set."${C_END}" \
+		echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" - $(DOCKER_PLTF) "${C_YEL}"docker-compose.yml"${C_END}" .env file "${C_RED}"is not set."${C_END}" \
 		Create it by executing "${C_YEL}"$$ make env-set"${C_END}; \
 	fi
 
@@ -94,18 +82,17 @@ else
 	echo "COMPOSE_PROJECT_LEAD=\"$(DOCKER_LEAD)\"\r\n\
 	COMPOSE_PROJECT_CNET=\"$(DOCKER_CNET)\"\r\n\
 	COMPOSE_PROJECT_IMGK=\"$(DOCKER_IMGK)\"\r\n\
-	COMPOSE_PROJECT_NAME=\"$(DOCKER_CAAS)\"\r\n\
 	COMPOSE_PROJECT_HOST=\"$(DOCKER_HOST)\"\r\n\
 	COMPOSE_PROJECT_PORT=$(DOCKER_PORT)\r\n\
-	COMPOSE_PROJECT_MEM=\"$(DOCKER_MEM)\"\r\n\
-	COMPOSE_PROJECT_SWAP=\"$(DOCKER_SWAP)\"\r\n\
-	POSTGRES_DATABASE=$(SQL_NAME)\r\n\
-	POSTGRES_USER=$(SQL_USER)\r\n\
-	POSTGRES_PASSWORD=\"$(SQL_PASS)\""> ./docker/.env;
-	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" DATABASE - $(DOCKER_PLTF) "${C_YEL}"docker-compose.yml"${C_END}" .env file "${C_GRN}"has been set."${C_END};
-	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" DATABASE - Container: "${C_GRN}$(DOCKER_CONTAINER)${C_END}
-	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" DATABASE - Max. memory usage: "${C_GRN}$(DOCKER_MEM)${C_END}
-	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" DATABASE - Is going to be served at: "${C_GRN}$(word 1,$(shell hostname -I)):$(DOCKER_PORT)${C_END}
+	COMPOSE_PROJECT_NAME=\"$(DOCKER_CAAS)\"\r\n\
+	COMPOSE_PROJECT_MEM=\"$(DOCKER_CAAS_MEM)\"\r\n\
+	COMPOSE_PROJECT_SWAP=\"$(DOCKER_CAAS_SWAP)\"\r\n\
+	COMPOSE_PROJECT_APP_PORT=\"$(DOCKER_APP_PORT)\"" > ./docker/.env; \
+	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" "${C_YEL}$(DOCKER_PLTF)${C_END}" - "${C_YEL}"docker-compose.yml"${C_END}" .env file "${C_GRN}"has been set."${C_END};
+	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" "${C_YEL}$(DOCKER_PLTF)${C_END}" - Container: "${C_GRN}$(DOCKER_CONTAINER)${C_END}
+	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" "${C_YEL}$(DOCKER_PLTF)${C_END}" - Max. memory usage: "${C_GRN}$(DOCKER_CAAS_MEM)${C_END}" - swap: "${C_GRN}$(DOCKER_CAAS_SWAP)${C_END}
+	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" "${C_YEL}$(DOCKER_PLTF)${C_END}" - SMTP is served at: http://"${C_GRN}$(word 1,$(shell hostname -I)):$(DOCKER_PORT)${C_END}
+	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" "${C_YEL}$(DOCKER_PLTF)${C_END}" - APP/API is served at: http://127.0.0.1:"${C_GRN}$(DOCKER_APP_PORT)${C_END}
 endif
 
 # -------------------------------------------------------------------------------------------------
@@ -114,11 +101,11 @@ endif
 .PHONY: info ssh build up dev start stop restart clear destroy
 
 info: ## shows container information
-	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" - DATABASE: "${C_GRN}"$(DOCKER_PLTF)"${C_END};
+	echo ${C_BLU}"$(PROJECT_NAME)"${C_END}" - MAILER: "${C_GRN}"$(DOCKER_PLTF)"${C_END};
 	printf ${C_YEL}"Container ID.: "${C_END}; $(DOCKER) ps -aqf "name=^$(DOCKER_CONTAINER)$$"; printf "%s";
 	echo ${C_YEL}"Name.........: "${C_END}$(DOCKER_CONTAINER);
 	echo ${C_YEL}"Image........: "${C_END}"$(DOCKER_CONTAINER):$(DOCKER_IMGK)";
-	echo ${C_YEL}"Memory.......: "${C_END}"$(DOCKER_MEM)";
+	echo ${C_YEL}"Memory.......: "${C_END}"$(DOCKER_CAAS_MEM)";
 	echo ${C_YEL}"Host.........: "${C_END}"$(DOCKER_HOST):$(DOCKER_PORT)";
 	echo ${C_YEL}"Hostname.....: "${C_END}"$(word 1,$(shell hostname -I)):"$(DOCKER_PORT);
 	printf ${C_YEL}"Docker.Host..: "${C_END};$(DOCKER) inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(DOCKER_CONTAINER);
@@ -139,7 +126,7 @@ start: ## starts the container and put on running
 stop: ## stops the running container but data won't be destroyed
 	cd docker && $(DOCKER_COMPOSE) stop
 
-restart: ## starts the running container
+restart: ## restarts the running container
 	cd docker && $(DOCKER) restart $(DOCKER_CONTAINER)
 
 clear: ## removes container from Docker running containers
@@ -149,7 +136,6 @@ clear: ## removes container from Docker running containers
 
 destroy: ## delete container image from Docker cache
 	cd docker && $(DOCKER) rmi -f $(DOCKER_CONTAINER):$(DOCKER_IMGK)
-	$(SUDO) rm -rf data
 
 dev: ## sets a development enviroment
 	echo ${C_YEL}"\"dev\" recipe has not usage in this project"${C_END};
