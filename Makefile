@@ -81,7 +81,7 @@ apirest-network: ## creates the apirest container network - execute this recipe 
 apirest-ssh: ## enters the apirest container shell
 	cd platform/$(APIREST_PLTF) && $(MAKE) ssh
 
-apirest-start: ## starts the apirest container
+apirest-start: ## starts the apirest container running
 	cd platform/$(APIREST_PLTF) && $(MAKE) start
 
 apirest-stop: ## stops the apirest container but its assets will not be destroyed
@@ -107,39 +107,39 @@ apirest-destroy: ## destroys completly the apirest container
 	fi
 
 # -------------------------------------------------------------------------------------------------
-#  Postgres Database Service
+#  Database Service
 # -------------------------------------------------------------------------------------------------
-.PHONY: postgres-hostcheck postgres-info postgres-set postgres-create postgres-ssh postgres-start postgres-stop postgres-destroy
+.PHONY: db-hostcheck db-info db-set db-create db-ssh db-start db-stop db-destroy
 
-postgres-hostcheck: ## shows this project ports availability on local machine for database container
+db-hostcheck: ## shows this project ports availability on local machine for database container
 	cd platform/$(DATABASE_PLTF) && $(MAKE) port-check
 
-postgres-info: ## shows docker related information
+db-info: ## shows docker related information
 	cd platform/$(DATABASE_PLTF) && $(MAKE) info
 
-postgres-set: ## sets the database enviroment file to build the container
+db-set: ## sets the database enviroment file to build the container
 	cd platform/$(DATABASE_PLTF) && $(MAKE) env-set
 
-postgres-create: ## creates the database container from Docker image
+db-create: ## creates the database container from Docker image
 	cd platform/$(DATABASE_PLTF) && $(MAKE) build up
 
-postgres-network: ## creates the database container external network
+db-network: ## creates the database container external network
 	$(MAKE) apirest-stop
 	cd platform/$(DATABASE_PLTF) && $(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.network.yml up -d
 
-postgres-ssh: ## enters the apirest container shell
+db-ssh: ## enters the apirest container shell
 	cd platform/$(DATABASE_PLTF) && $(MAKE) ssh
 
-postgres-start: ## starts the database container
+db-start: ## starts the database container running
 	cd platform/$(DATABASE_PLTF) && $(MAKE) start
 
-postgres-stop: ## stops the database container but its assets will not be destroyed
+db-stop: ## stops the database container but its assets will not be destroyed
 	cd platform/$(DATABASE_PLTF) && $(MAKE) stop
 
-postgres-restart: ## restarts the running database container
+db-restart: ## restarts the running database container
 	cd platform/$(DATABASE_PLTF) && $(MAKE) restart
 
-postgres-destroy: ## destroys completly the database container with its data
+db-destroy: ## destroys completly the database container with its data
 	echo ${C_RED}"Attention!"${C_END};
 	echo ${C_YEL}"You're about to remove the database container and delete its image resource and persistance data."${C_END};
 	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
@@ -157,36 +157,80 @@ postgres-destroy: ## destroys completly the database container with its data
 		fi \
 	fi
 
-.PHONY: postgres-test-up postgres-test-down
+.PHONY: db-test-up db-test-down
 
-postgres-test-up: ## creates a side database for tests
-	$(DOCKER) exec -it $(DATABASE_CONTAINER) sh -c 'dropdb -f $(DATABASE_NAME)_testing -U "$(DATABASE_USER)"; createdb $(DATABASE_NAME)_testing -U "$(DATABASE_USER)"';
+db-test-up: ## creates a side database for tests
+	cd platform/$(DATABASE_PLTF) && $(MAKE) db-test-up
 
-postgres-test-down: ## drops the side database for tests
-	$(DOCKER) exec -it $(DATABASE_CONTAINER) sh -c 'dropdb -f $(DATABASE_NAME)_testing -U "$(DATABASE_USER)";';
+db-test-down: ## drops the side database for tests
+	cd platform/$(DATABASE_PLTF) && $(MAKE) db-test-down
 
-.PHONY: postgres-sql-install postgres-sql-replace postgres-sql-backup postgres-sql-remote postgres-copy-remote
+.PHONY: db-sql-install db-sql-replace db-sql-backup db-sql-remote db-copy-remote
 
-postgres-sql-install: ## installs postgres sql file into the container database to init a project from resources/database
+db-sql-install: ## migrates sql file with schema / data into the container main database to init a project
 	$(MAKE) local-ownership-set;
-	$(DOCKER) exec -i $(DATABASE_CONTAINER) sh -c 'psql -d $(DATABASE_NAME) -U "$(DATABASE_USER)"' < $(ROOT_DIR)$(DATABASE_PATH)$(DATABASE_INIT)
-	echo ${C_YEL}"$(PROJECT_NAME) DATABASE"${C_END}" has been copied to container from "${C_BLU}"$(DATABASE_PATH)$(DATABASE_INIT)"${C_END}
+	cd platform/$(DATABASE_PLTF) && $(MAKE) sql-install
 
-postgres-sql-replace: ## replaces the container database with the latest postgres .sql backup file from resources/database
+db-sql-replace: ## replaces the container main database with the latest database .sql backup file
 	$(MAKE) local-ownership-set;
-	$(DOCKER) exec -i $(DATABASE_CONTAINER) sh -c 'psql -d $(DATABASE_NAME) -U "$(DATABASE_USER)"' < $(ROOT_DIR)$(DATABASE_PATH)$(DATABASE_BACK)
-	echo ${C_YEL}"$(PROJECT_NAME) DATABASE"${C_END}" has been replaced from "${C_BLU}"$(DATABASE_PATH)$(DATABASE_BACK)"${C_END}
+	cd platform/$(DATABASE_PLTF) && $(MAKE) sql-replace
 
-postgres-sql-backup: ## copies the container database as postgres .sql backup file into resources/database
+db-sql-backup: ## copies the container main database as backup into a .sql file
 	$(MAKE) local-ownership-set;
-	[ -d .$(DATABASE_PATH)$(DATABASE_BACK) ] || touch .$(DATABASE_PATH)$(DATABASE_BACK)
-	$(DOCKER) exec $(DATABASE_CONTAINER) sh -c 'pg_dump -d $(DATABASE_NAME) -U "$(DATABASE_USER)"' > $(ROOT_DIR)$(DATABASE_PATH)$(DATABASE_BACK)
-	echo ${C_YEL}"$(PROJECT_NAME) DATABASE"${C_END}" backup has been created at "${C_BLU}"$(DATABASE_PATH)$(DATABASE_BACK)"${C_END}
+	cd platform/$(DATABASE_PLTF) && $(MAKE) sql-backup
 
-postgres-sql-drop: ## drops and creates the postgres database into the container for reseting
+db-sql-drop: ## drops the container main database but recreates the database without schema as a reset action
 	$(MAKE) local-ownership-set;
-	$(DOCKER) exec -i $(DATABASE_CONTAINER) sh -c 'dropdb -f $(DATABASE_NAME) -U "$(DATABASE_USER)"; createdb $(DATABASE_NAME) -U "$(DATABASE_USER)"'
-	echo ${C_YEL}"$(PROJECT_NAME) DATABASE"${C_END}" in container "${C_YEL}"$(DATABASE_CONTAINER)"${C_END}" has been deleted."
+	cd platform/$(DATABASE_PLTF) && $(MAKE) sql-drop
+
+# -------------------------------------------------------------------------------------------------
+#  Mailer Service
+# -------------------------------------------------------------------------------------------------
+.PHONY: mailhog-hostcheck mailhog-info mailhog-set mailhog-create mailhog-network mailhog-ssh mailhog-start mailhog-stop mailhog-destroy
+
+mailhog-hostcheck: ## shows this project ports availability on local machine for broker container
+	cd platform/$(MAILER_PLTF) && $(MAKE) port-check
+
+mailhog-info: ## shows the broker docker related information
+	cd platform/$(MAILER_PLTF) && $(MAKE) info
+
+mailhog-set: ## sets the broker enviroment file to build the container
+	cd platform/$(MAILER_PLTF) && $(MAKE) env-set
+
+mailhog-create: ## creates the broker container from Docker image
+	cd platform/$(MAILER_PLTF) && $(MAKE) build up
+
+mailhog-network: ## creates the broker container network - execute this recipe first before others
+	$(MAKE) mailhog-stop
+	cd platform/$(MAILER_PLTF) && $(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.network.yml up -d
+
+mailhog-ssh: ## enters the broker container shell
+	cd platform/$(MAILER_PLTF) && $(MAKE) ssh
+
+mailhog-start: ## starts the broker container running
+	cd platform/$(MAILER_PLTF) && $(MAKE) start
+
+mailhog-stop: ## stops the broker container but its assets will not be destroyed
+	cd platform/$(MAILER_PLTF) && $(MAKE) stop
+
+mailhog-restart: ## restarts the running broker container
+	cd platform/$(MAILER_PLTF) && $(MAKE) restart
+
+mailhog-destroy: ## destroys completly the broker container
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to remove the "${C_BLU}"$(MAILER_PROJECT)"${C_END}" container and delete its image resource."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"K.O.! container has been stopped but not destroyed."${C_END}; \
+    else \
+		cd platform/$(MAILER_PLTF) && $(MAKE) stop clear destroy; \
+		echo -n ${C_GRN}"Do you want to clear DOCKER cache? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+			echo ${C_YEL}"The following command is delegated to be executed by user:"${C_END}; \
+			echo "$$ $(DOCKER) system prune"; \
+		else \
+			$(DOCKER) system prune; \
+			echo ${C_GRN}"O.K.! DOCKER cache has been cleared up."${C_END}; \
+		fi \
+	fi
 
 # -------------------------------------------------------------------------------------------------
 #  Repository Helper
@@ -194,10 +238,16 @@ postgres-sql-drop: ## drops and creates the postgres database into the container
 .PHONY: repo-flush repo-commit
 
 repo-flush: ## clears local git repository cache specially for updating .gitignore on local IDE
-	git rm -rf --cached .; git add .; git commit -m "fix: cache cleared for untracked files"
+	echo ${C_YEL}"Clear repository for untracked files:"${C_END}
+	echo ${C_YEL}"$$"${C_END}" git rm -rf --cached .; git add .; git commit -m \"maint: cache cleared for untracked files\""
+	echo ""
+	echo ${C_YEL}"Platform repository against REST API repository:"${C_END}
+	echo ${C_YEL}"$$"${C_END}" git rm -r --cached -- \"apirest/*\" \":(exclude)apirest/.gitkeep\""
 
 repo-commit: ## echoes common git commands
-	echo "git add . && git commit -m \"feat: ... \" && git push -u origin [branch]"
+	echo ${C_YEL}"Common commiting commands:"${C_END}" (see Conventional Commits: feat, fix, maint, dev, doc...)"
+	echo ${C_YEL}"$$"${C_END}" git add . && git commit -m \"feat: ... \" && git push -u origin [branch]"
+	echo ""
 	echo ${C_YEL}"For fixing pushed commit comment:"${C_END}
-	echo "git commit --amend"
-	echo "git push --force origin [branch]"
+	echo ${C_YEL}"$$"${C_END}" git commit --amend"
+	echo ${C_YEL}"$$"${C_END}" git push --force origin [branch]"
