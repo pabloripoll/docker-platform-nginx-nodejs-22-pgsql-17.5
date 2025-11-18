@@ -29,8 +29,8 @@ dist-ssr
 
 # Platforms
 /vault
-/platform/nginx-nodejs/docker/config/supervisor/conf.d/*
-!/platform/nginx-nodejs/docker/config/supervisor/conf.d/.gitkeep
+/platform/nginx-nodejs-*/docker/config/supervisor/conf.d/*
+!/platform/nginx-nodejs-*/docker/config/supervisor/conf.d/.gitkeep
 /resources/database/*
 !/resources/database/.gitkeep
 /resources/docs/apirest/project/*
