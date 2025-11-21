@@ -6,6 +6,10 @@
 
 # NGINX 1.28, NODEJS 22.16, POSTGRES 16.4
 
+[![Generic badge](https://img.shields.io/badge/version-1.0-blue.svg)](https://shields.io/)
+[![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](./)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
 ## Repository Overview
 
 This Infrastructure Platform repository provides a dedicated Node.js stack for back-end API projects, enabling developers to work within a consistent local development framework that closely mirrors real-world deployment scenarios. Whether your application will run on **AWS EC2**, **Google Cloud GCE**, **Azure** instances, **VPS** or be distributed across **Kubernetes pods**, this structure ensures smooth transitions between environments.
@@ -33,6 +37,12 @@ Additionally, the platform is designed to support running multiple development v
 
 ## <a id="requirements"></a>Requirements
 
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![gnu](https://img.shields.io/badge/gnu-%23A42E2B.svg?style=for-the-badge&logo=gnu&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Alpine Linux](https://img.shields.io/badge/Alpine_Linux-%230D597F.svg?style=for-the-badge&logo=alpine-linux&logoColor=white)
+![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
+
 Despite Docker’s cross-platform compatibility, for intermediate to advanced software development on environments other than Windows NT or macOS, automating the platform build and streamlining the process of starting feature development is crucial. This automation enables a more dynamic and efficient software development lifecycle.
 
 - **Docker**: Containerizes applications for consistent environments.
@@ -41,7 +51,7 @@ Despite Docker’s cross-platform compatibility, for intermediate to advanced so
 
 If you won't use GNU Make, Docker commands will have to be executed from within the `./platform/nginx-nodejs/docker` and `./platform/postgres-16.4/docker` directories, e.g.:
 ```bash
-platform/nginx-nodejs/docker $ sudo docker compose up --build --no-recreate -d
+./platform/nginx-nodejs/docker $ sudo docker compose up --build --no-recreate -d
 ```
 
 | Dev machine   | Machine's features                                                                            |
@@ -52,6 +62,9 @@ platform/nginx-nodejs/docker $ sudo docker compose up --build --no-recreate -d
 <br>
 
 ## <a id="platform-features"></a>Platform Features
+
+![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
 
 It can be installed the most known JS **back-end / API** frameworks:
 
@@ -96,6 +109,8 @@ COMPOSE_PROJECT_GROUP="myproj"
 <br>
 
 ## <a id="db-settings"></a>Database Service Container Setting
+
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 
 Inside `./platform/pgsql-16.4` there are a dedicated GNU Make file and the main Docker directory with the scripts to build the required platform configuration adapted from [PostgreSQL GitHub repository source](https://github.com/docker-library/postgres/blob/master/17/alpine3.22/docker-entrypoint.sh)
 
